@@ -1,17 +1,43 @@
 const path = require('path');
-const fs = require('fs');
 
 const express = require('express');
 
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const multer = require('multer');
 
 const feedRoutes = require('./routes/feed');
 
 const app = express();
 
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'images');
+    },
+    filename: function(req, file, cb) {
+        cb(null, new Date().toISOString() + file.originalname);
+    }
+});
+const fileFilter = (req, file, cb) => {
+    if (
+        file.mimetype === 'image/png' ||
+        file.mimetype === 'image/jpg' ||
+        file.mimetype === 'image/jpeg' 
+    ) {
+        cb(null, true);
+    } else {
+        cb(null, false);
+    }
+};
+
 app.use(bodyParser.json()); // application/json
-app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use(
+    multer({
+        storage: fileStorage, 
+        fileFilter: fileFilter 
+    }).single('image')
+  );
+// app.use('/images', express.static(path.join(__dirname, 'images')));
 
 //Avoiding CORS error
 app.use((req, res, next) => {
@@ -28,7 +54,7 @@ app.use((error, req, res, next) => {
     const status = error.statusCode;
     const message = error.messsage;
     res.status(status).json({ message: message });
-})
+});
 
 mongoose
     .connect('mongodb+srv://cyrus:Y1B97SO21fuMmiI7@cluster0-xp4l4.mongodb.net/messages?authSource=admin&replicaSet=Cluster0-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true')
