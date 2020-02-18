@@ -10,12 +10,12 @@ const feedRoutes = require('./routes/feed');
 
 const app = express();
 
-const storage = multer.diskStorage({
+const fileStorage = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, 'images');
     },
     filename: function(req, file, cb) {
-        cb(null, new Date().toISOString() + file.originalname);
+        cb(null, new Date().toISOString().replace(/:/g, '-') + file.originalname)
     }
 });
 const fileFilter = (req, file, cb) => {
@@ -37,7 +37,7 @@ app.use(
         fileFilter: fileFilter 
     }).single('image')
   );
-// app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 //Avoiding CORS error
 app.use((req, res, next) => {
